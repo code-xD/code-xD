@@ -20,5 +20,6 @@ urlpatterns = [
     path('signup/',UserRegisterView.as_view(),name='user-register'),
     path('set-password/',SetPasswordView,name='set-password'),
     path('signin/',LoginUserView,name='login-user'),
-    path('upload/',AddDocumentView,name='upload-document')
+    path('upload/',AddDocumentView,name='upload-document'),
+    path('get-documents/',DocumentListView.as_view(),name='list-document'),
 ]

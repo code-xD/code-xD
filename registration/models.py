@@ -12,6 +12,7 @@ def document_directory_path(instance, filename):
 class Profile(models.Model):
     gstin = models.CharField('GST Number',max_length=15)
     aadhar_no = models.BigIntegerField('Aadhar Number',primary_key=True)
+    name = models.CharField(max_length=100)
     state = models.CharField('State',max_length=30)
     city = models.CharField('City',max_length=50)
     email = models.EmailField()

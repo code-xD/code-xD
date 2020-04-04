@@ -1,2 +1,3 @@
 *.pyc
 media/Documents/*
+__pycache__/
