@@ -1,0 +1,5 @@
+Django==2.1
+djangorestframework==3.11.0
+python-http-client==3.2.7
+pytz==2019.3
+sendgrid==6.2.1

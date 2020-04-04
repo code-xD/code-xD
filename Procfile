@@ -1,0 +1,1 @@
+web: gunicorn finhelp.wsgi --log-file -
