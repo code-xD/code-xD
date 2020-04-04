@@ -33,7 +33,6 @@ class Document(models.Model):
     document = models.FileField(upload_to=document_directory_path)
     profile = models.ForeignKey(Profile,on_delete=models.CASCADE)
 
-class DataSet(models.Model):
-    sector = models.CharField(max_length=100)
-    investment_range = models.CharField(choices=income_range)
-        
+# class DataSet(models.Model):
+#     sector = models.CharField(max_length=100)
+#     investment_range = models.CharField(choices=income_range)
