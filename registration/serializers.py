@@ -48,4 +48,4 @@ class DocumentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Document
-        fields = ['name','document','approved'] 
+        fields = ['name','document'] 
