@@ -1,0 +1,63 @@
+from rest_framework import serializers
+from .models import *
+from rest_framework.exceptions import ValidationError
+from django.db import transaction
+import random
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from django.template.defaultfilters import slugify
+from django.db import IntegrityError
+from django.conf import settings
+
+def get_or_create_user(username, password=None):
+    username = slugify(username)
+    try:
+        new_user = User.objects.create_user(username=username,password=password)
+    except IntegrityError:
+        raise ValidationError('Phone number already exists.')
+    return new_user
+
+def send_message(to_mail,SUBJECT,MESSAGE):
+    message = Mail(
+        from_email='admin@finhelp.com',
+        to_emails=to_mail,
+        subject=SUBJECT,
+        html_content=MESSAGE)
+    try:
+        sg = SendGridAPIClient('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')
+        response = sg.send(message)
+        print(response.status_code)
+        print(response.body)
+        print(response.headers)
+    except Exception as e:
+        print(str(e))
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        fields = ['gstin','aadhar_no','state','city','address','mobile_number','is_registered']
+    
+    def create(self,validated_data):
+        number = validated_data.get('mobile_number')
+        with transaction.atomic():
+            user = get_or_create_user(username=number)
+            profile = Profile.objects.create(**validated_data,auth_user=user)
+        return profile
+
+    def update(self, instance, validated_data):
+        with transaction.atomic():
+            instance = Profile.objects.select_for_update().get(static_id=instance.static_id)
+            is_registered = validated_data.get('status', instance.is_registered)
+            # Only pending orders can have status changed.
+            if instance.is_registered == False:
+                instance.is_registered = validated_data.get('is_registered', instance.is_registered)
+                instance.save(update_fields = ['is_registered'])
+                return instance                
+            raise ValidationError("Registration status can't be reverted.")
+
+class DocumentSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Document
+        fields = ['name','document','approved'] 
