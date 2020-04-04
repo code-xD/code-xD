@@ -3,8 +3,6 @@ from .models import *
 from rest_framework.exceptions import ValidationError
 from django.db import transaction
 import random
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 from django.template.defaultfilters import slugify
 from django.db import IntegrityError
 from django.conf import settings
@@ -16,21 +14,6 @@ def get_or_create_user(username, password=None):
     except IntegrityError:
         raise ValidationError('Phone number already exists.')
     return new_user
-
-def send_message(to_mail,SUBJECT,MESSAGE):
-    message = Mail(
-        from_email='admin@finhelp.com',
-        to_emails=to_mail,
-        subject=SUBJECT,
-        html_content=MESSAGE)
-    try:
-        sg = SendGridAPIClient('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')
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-    except Exception as e:
-        print(str(e))
 
 class ProfileSerializer(serializers.ModelSerializer):
 
