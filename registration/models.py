@@ -6,7 +6,7 @@ import uuid
 
 
 def document_directory_path(instance, filename):
-    return f'Documents/{instance.aadhar_no}/{instance.name}'.format(instance.name, filename.split('.')[0])
+    return f'Documents/{instance.profile.aadhar_no}/{instance.name}'.format(instance.name, filename.split('.')[0])
 
 # Create your models here.
 class Profile(models.Model):
