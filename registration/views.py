@@ -39,7 +39,7 @@ class UserRegisterView(CreateAPIView):
         response = super().create(request, *args, **kwargs)
         if response.status_code == 201:
             static_id = Profile.objects.get(aadhar_no = response.data.get('aadhar_no')).static_id
-            return JsonResponse({'message':'Check your Mail for OTP.','idtoken':static_id})
+            return JsonResponse({'message':'Registered Successfully.','idtoken':static_id})
         return response
 
 FILE_FORMATS_SUPPORTED = ('.jpg','pdf','.jpeg','.png')
@@ -49,7 +49,7 @@ FILE_FORMATS_SUPPORTED = ('.jpg','pdf','.jpeg','.png')
 def AddDocumentView(request):
     data = request.POST
     static_id = request.META.get('HTTP_X_AUTH')
-    profile = Profile.objects.get(static_id=static_id)
+    profile = Profile.objects.get(static_id=static_id,is_registered=True)
     try:
         file = request.FILES["file"]
         if not file.name.endswith(FILE_FORMATS_SUPPORTED):
@@ -78,7 +78,7 @@ class DocumentListView(ListAPIView):
     model = Document
 
     def get_queryset(self):
-        queryset = Document.objects.filter(profile__static_id = self.request.META.get('HTTP_X_AUTH'))
+        queryset = Document.objects.filter(profile__static_id = self.request.META.get('HTTP_X_AUTH'),profile__is_registered=True)
         return queryset
 
 @csrf_exempt

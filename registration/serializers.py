@@ -19,7 +19,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['gstin','aadhar_no','state','city','address','mobile_number','is_registered']
+        fields = ['gstin','aadhar_no','state','city','address','mobile_number','is_registered','status','name']
     
     def create(self,validated_data):
         number = validated_data.get('mobile_number')
@@ -31,13 +31,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         with transaction.atomic():
             instance = Profile.objects.select_for_update().get(static_id=instance.static_id)
-            is_registered = validated_data.get('status', instance.is_registered)
+            is_registered = validated_data.get('is_registered', instance.is_registered)
+            status = validated_data.get('status', instance.status)
             # Only pending orders can have status changed.
             if instance.is_registered == False:
                 instance.is_registered = validated_data.get('is_registered', instance.is_registered)
                 instance.save(update_fields = ['is_registered'])
                 return instance                
-            raise ValidationError("Registration status can't be reverted.")
+            if instance.status == 'Pending':
+                instance.status = validated_data.get('status', instance.status)
+                instance.save(update_fields = ['status'])
+                return instance
+            raise ValidationError("Status can't be reverted.")
 
 class DocumentSerializer(serializers.ModelSerializer):
     

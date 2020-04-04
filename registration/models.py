@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 import uuid
 # from django.core.validators import MaxVa
 
+status_choices = (('Approved','Approved'),('Pending','Pending'),('Rejected','Rejected'))
 
 def document_directory_path(instance, filename):
     return f'Documents/{instance.profile.aadhar_no}/{instance.name}'.format(instance.name, filename.split('.')[0])
@@ -21,6 +22,7 @@ class Profile(models.Model):
     auth_user = models.ForeignKey(User,on_delete=models.CASCADE)
     static_id = models.UUIDField(max_length=36, unique=True, default=uuid.uuid4, editable=False)
     is_registered = models.BooleanField(default=False)
+    status = models.CharField(max_length=20,default='Pending',choices=status_choices)
 
     def __str__(self):
         return str(self.aadhar_no)
@@ -29,4 +31,3 @@ class Document(models.Model):
     name = models.CharField(max_length=50)
     document = models.FileField(upload_to=document_directory_path)
     profile = models.ForeignKey(Profile,on_delete=models.CASCADE)
-    approved = models.BooleanField(default=False)
