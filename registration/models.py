@@ -5,6 +5,7 @@ import uuid
 # from django.core.validators import MaxVa
 
 status_choices = (('Approved','Approved'),('Pending','Pending'),('Rejected','Rejected'))
+income_range = (('Less than 25L','Less than 25L'),('25L-5Cr','25L-5Cr'),('5Cr-10Cr','5Cr-10Cr'),('Greater than 10Cr','Greater than 10Cr'))
 
 def document_directory_path(instance, filename):
     return f'Documents/{instance.profile.aadhar_no}/{instance.name}'.format(instance.name, filename.split('.')[0])
@@ -31,3 +32,8 @@ class Document(models.Model):
     name = models.CharField(max_length=50)
     document = models.FileField(upload_to=document_directory_path)
     profile = models.ForeignKey(Profile,on_delete=models.CASCADE)
+
+class DataSet(models.Model):
+    sector = models.CharField(max_length=100)
+    investment_range = models.CharField(choices=income_range)
+        
