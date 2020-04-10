@@ -1,10 +1,10 @@
 from django.shortcuts import render
 import json
-from django.http import JsonResponse,HttpResponseBadRequest
+from django.http import JsonResponse,HttpResponseBadRequest,HttpResponseNotFound
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST,require_GET
 from rest_framework.generics import *
 from rest_framework import status
 from .mixins import *
@@ -14,6 +14,7 @@ from django.core.files import File
 from django.contrib.auth import authenticate
 from utils.parsepdf import parseImportantData
 from django.db import transaction
+import requests
 # from django.core.Files import File
 
 
@@ -139,4 +140,17 @@ def LoginUserView(request,data):
         payload['idtoken'] = profile.static_id
         return JsonResponse(payload)
     except:
-        return HttpResponseForbidden("Profile Not Avaiable!")      
+        return HttpResponseForbidden("Profile Not Avaiable!")
+
+@csrf_exempt
+@require_GET
+def FetchMSMEDetails(request):
+    static_id = request.META.get('HTTP_X_AUTH')
+    aid = Profile.objects.get(static_id=static_id).aid
+    dataset = requests.get(API_URL).json()['records']
+    print(aid)
+    for data in dataset:
+        if data['AID'] == aid:
+            return JsonResponse(data)
+
+    return HttpResponseNotFound('Not Found')        
