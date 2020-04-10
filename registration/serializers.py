@@ -48,7 +48,7 @@ class ProfileSerializer(serializers.ModelSerializer):
                 instance.is_registered = validated_data.get('is_registered', instance.is_registered)
                 instance.save(update_fields = ['is_registered'])
                 return instance                
-            if instance.status == 'Pending':
+            if instance.status not in ["Approved","Rejected"]:
                 instance.status = validated_data.get('status', instance.status)
                 instance.save(update_fields = ['status'])
                 return instance

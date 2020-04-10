@@ -65,33 +65,34 @@ def AddDocumentView(request):
     except Exception as e:
         return JsonResponse({'status':0,"message":str(e)})
 
-    with transaction.atomic():
-        try:
-            document = Document.objects.get(profile=profile)
-            document.document = file
-            document.save()
-        except Document.DoesNotExist:
-            document = Document.objects.create(profile=profile)
-            document.document = file
-            document.save()
+    try:
+        document = Document.objects.get(profile=profile)
+        document.document = file
+        document.save()
+    except Document.DoesNotExist:
+        document = Document.objects.create(profile=profile)
+        document.document = file
+        document.save()
 
         try:
-            output_data = parseImportantData(document.document.path)
-            if output_data.get('form_number')!=6:
-                return HttpResponseBadRequest('This is not a valid form.')
+            with transaction.atomic():
+                output_data = parseImportantData(document.document.path)
+                if output_data.get('form_number')!=6:
+                    return HttpResponseBadRequest('This is not a valid form.')
 
-            if output_data.get('pan_number')!=profile.pan_number:
-                return HttpResponseBadRequest('Pan Number is not matching.')
-            
-            if output_data.get('company_name')!=profile.name:
-                return HttpResponseBadRequest('This is not your ITR.')
-            output_data.pop('company_name')
-            output_data.pop('pan_number')
-            output_data.pop('form_number')
-            ITRDataset.objects.create(profile=profile,**output_data)
-            profile.status = 'Under Review'
-            profile.save()
+                if output_data.get('pan_number')!=profile.pan_number:
+                    return HttpResponseBadRequest('Pan Number is not matching.')
+                
+                if output_data.get('company_name')!=profile.name:
+                    return HttpResponseBadRequest('This is not your ITR.')
+                output_data.pop('company_name')
+                output_data.pop('pan_number')
+                output_data.pop('form_number')
+                ITRDataset.objects.create(profile=profile,**output_data)
+                profile.status = 'Under Review'
+                profile.save()
         except:
+            document.delete()
             return HttpResponseBadRequest('Please Submit a Valid Form.')
     return JsonResponse({'status':1,"message":"file upload successful"})
 
