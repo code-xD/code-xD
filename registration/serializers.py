@@ -59,3 +59,9 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = ['document']
+
+class ITRDatasetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ITRDataset
+        fields = ['total_tax','tax_paid','total_income','loss','reported_loss','deemed_income']

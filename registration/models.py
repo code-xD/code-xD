@@ -41,4 +41,5 @@ class ITRDataset(models.Model):
     tax_paid = models.BigIntegerField()
     total_income = models.BigIntegerField()
     loss = models.BigIntegerField()
+    reported_loss = models.BigIntegerField(default=0)
     deemed_income = models.BigIntegerField()

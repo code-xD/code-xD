@@ -153,4 +153,17 @@ def FetchMSMEDetails(request):
         if data['AID'] == aid:
             return JsonResponse(data)
 
-    return HttpResponseNotFound('Not Found')        
+    return HttpResponseNotFound('Not Found')
+
+class UpdateLossView(UpdateAPIView):
+    serializer_class = ITRDatasetSerializer
+    model = ITRDataset
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset)
+        return obj
+
+    def get_queryset(self):
+        queryset = ITRDataset.objects.filter(profile__static_id = self.request.META.get('HTTP_X_AUTH'),profile__is_registered=True, profile__status='Under Review')
+        return queryset
