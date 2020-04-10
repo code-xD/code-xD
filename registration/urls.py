@@ -22,4 +22,5 @@ urlpatterns = [
     path('signin/',LoginUserView,name='login-user'),
     path('upload/',AddDocumentView,name='upload-document'),
     path('get-documents/',DocumentListView.as_view(),name='list-document'),
+    # path('get-feedback/',Da)
 ]

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseBadRequest
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
@@ -11,7 +11,9 @@ from .mixins import *
 from .permissions import *
 from rest_framework.response import Response
 from django.core.files import File
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
+from utils.parsepdf import parseImportantData
+from django.db import transaction
 # from django.core.Files import File
 
 
@@ -38,7 +40,7 @@ class UserRegisterView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == 201:
-            static_id = Profile.objects.get(aadhar_no = response.data.get('aadhar_no')).static_id
+            static_id = Profile.objects.get(aadhar_no = response.data.get('aid')).static_id
             return JsonResponse({'message':'Registered Successfully.','idtoken':static_id})
         return response
 
@@ -61,16 +63,35 @@ def AddDocumentView(request):
             return JsonResponse({"message": message, "status": 0})
     except Exception as e:
         return JsonResponse({'status':0,"message":str(e)})
-    try:
-        document = Document.objects.get(name=data['name'],profile=profile)
-        print(document)
-        document.document = file
-        document.save()
-    except Document.DoesNotExist:
-        document = Document.objects.create(name=data['name'],profile=profile)
-        document.document = file
-        document.save()
 
+    with transaction.atomic():
+        try:
+            document = Document.objects.get(profile=profile)
+            document.document = file
+            document.save()
+        except Document.DoesNotExist:
+            document = Document.objects.create(profile=profile)
+            document.document = file
+            document.save()
+
+        try:
+            output_data = parseImportantData(document.document.path)
+            if output_data.get('form_number')!=6:
+                return HttpResponseBadRequest('This is not a valid form.')
+
+            if output_data.get('pan_number')!=profile.pan_number:
+                return HttpResponseBadRequest('Pan Number is not matching.')
+            
+            if output_data.get('company_name')!=profile.name:
+                return HttpResponseBadRequest('This is not your ITR.')
+            output_data.pop('company_name')
+            output_data.pop('pan_number')
+            output_data.pop('form_number')
+            ITRDataset.objects.create(profile=profile,**output_data)
+            profile.status = 'Under Review'
+            profile.save()
+        except:
+            return HttpResponseBadRequest('Please Submit a Valid Form.')
     return JsonResponse({'status':1,"message":"file upload successful"})
 
 class DocumentListView(ListAPIView):
@@ -118,4 +139,4 @@ def LoginUserView(request,data):
         payload['idtoken'] = profile.static_id
         return JsonResponse(payload)
     except:
-        return HttpResponseForbidden("Profile Not Avaiable!") 
+        return HttpResponseForbidden("Profile Not Avaiable!")      

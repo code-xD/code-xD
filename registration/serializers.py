@@ -6,6 +6,7 @@ import random
 from django.template.defaultfilters import slugify
 from django.db import IntegrityError
 from django.conf import settings
+from utils.populate import returnProfileData
 
 def get_or_create_user(username, password=None):
     username = slugify(username)
@@ -15,17 +16,26 @@ def get_or_create_user(username, password=None):
         raise ValidationError('Phone number already exists.')
     return new_user
 
+API_URL = 'https://api.data.gov.in/catalog/2c895ab9-8042-4653-bfeb-7dc71281fd57?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&offset=0&limit=10&filters[State]=MAHARASHTRA'
+
 class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['gstin','aadhar_no','state','city','address','mobile_number','is_registered','status','name']
-    
+        fields = ['aid','pan_number','state','district','address','mobile_number','is_registered','status','name']
+        extra_kwargs = {
+            'state':{'required':False},
+            'district':{'required':False},
+            'address':{'required':False},
+            'name':{'required':False}
+        }    
     def create(self,validated_data):
         number = validated_data.get('mobile_number')
+        aid = validated_data.get('aid')
         with transaction.atomic():
             user = get_or_create_user(username=number)
-            profile = Profile.objects.create(**validated_data,auth_user=user)
+            msme_data = returnProfileData(aid)
+            profile = Profile.objects.create(**validated_data,**msme_data,auth_user=user)
         return profile
 
     def update(self, instance, validated_data):
@@ -48,4 +58,4 @@ class DocumentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Document
-        fields = ['name','document'] 
+        fields = ['document']
